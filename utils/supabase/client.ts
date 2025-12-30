@@ -9,7 +9,7 @@ export function createClient() {
   }
 
   return createBrowserClient(
-    supabaseUrl!,
-    supabaseKey!
+    supabaseUrl || '',
+    supabaseKey || ''
   )
 }
