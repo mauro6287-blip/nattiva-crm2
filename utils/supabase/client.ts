@@ -5,7 +5,7 @@ export function createClient() {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error('❌ Error de conexión: Variables de Supabase no inyectadas')
+    console.error('Faltan las variables de entorno de Supabase. Verifica tu archivo .env o la configuración en Hostinger.')
   }
 
   return createBrowserClient(
