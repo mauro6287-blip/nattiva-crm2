@@ -5,7 +5,7 @@ export function createClient() {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error('Error de Configuración: La URL de Supabase no ha sido inyectada')
+    console.error('❌ Error de conexión: Variables de Supabase no inyectadas')
   }
 
   return createBrowserClient(
