@@ -5,7 +5,8 @@ import AnalyticsCharts from '@/components/dashboard/analytics-charts'
 
 export default async function DashboardPage() {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data } = await supabase.auth.getUser()
+    const user = data?.user
 
     return (
         <div className="flex flex-col gap-6">
