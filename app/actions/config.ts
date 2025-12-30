@@ -6,6 +6,7 @@ import { Database } from '@/types_db'
 import { revalidatePath } from 'next/cache'
 
 // Service Role client for writing to tenants table
+// Using explicit ENV vars for safety
 const supabaseAdmin = createAdminClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -25,15 +26,18 @@ interface IntegrationConfig {
 }
 
 export async function updateTenantConfig(configData: IntegrationConfig) {
+    console.log('[updateTenantConfig] Start processing...', configData);
+
+    // 1. Auth check
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
+        console.error('[updateTenantConfig] No authenticated user found');
         return { error: 'No autorizado' }
     }
 
-    // 1. Get User's Tenant securely
-    // We strictly use auth.uid() to find the profile
+    // 2. Get User's Tenant securely
     const { data: profile } = await supabase
         .from('user_profiles')
         .select('tenant_id, role')
@@ -41,6 +45,7 @@ export async function updateTenantConfig(configData: IntegrationConfig) {
         .single()
 
     if (!profile || !('tenant_id' in (profile as any))) {
+        console.error('[updateTenantConfig] User has no tenant assigned', user.id);
         return { error: 'Usuario no tiene un sindicato asignado.' }
     }
     const tenantId = (profile as any).tenant_id as string
@@ -51,43 +56,28 @@ export async function updateTenantConfig(configData: IntegrationConfig) {
         return { error: 'Se requieren permisos de administrador.' }
     }
 
-    // 2. Fetch current config to merge
-    const { data: tenant, error: fetchError } = await supabaseAdmin
-        .from('tenants')
-        .select('config')
-        .eq('id', tenantId)
-        .single()
-
-    if (fetchError || !tenant) {
-        return { error: 'Error al obtener configuración actual.' }
+    // 3. Prepare Update Payload with explicit columns
+    // We are NOT using the 'config' JSON column anymore for GoodBarber keys as per request.
+    const updates = {
+        goodbarber_app_id: configData.goodbarber?.app_id || null,
+        goodbarber_api_key: configData.goodbarber?.api_key || null,
+        updated_at: new Date().toISOString()
     }
 
-    const currentConfig = ((tenant as any).config) || {}
+    console.log('[updateTenantConfig] Sending update to Supabase:', { tenantId, updates });
 
-    // 3. Merge new config
-    // We merge the goodbarber object specifically if it exists in currentConfig, to be safe, 
-    // or just overwrite the goodbarber key as requested.
-    // The prompt says "Mezcla el objeto existente con los nuevos datos de GoodBarber".
-    // Assuming configData contains the whole 'goodbarber' object.
-    const newConfig = {
-        ...currentConfig,
-        goodbarber: {
-            ...(currentConfig.goodbarber || {}),
-            ...configData.goodbarber
-        }
-    }
-
-    // 4. Update Tenant
+    // 4. Update Tenant using Admin Client
     const { error: updateError } = await (supabaseAdmin
         .from('tenants') as any)
-        .update({ config: newConfig })
+        .update(updates)
         .eq('id', tenantId)
 
     if (updateError) {
-        console.error('Update Config Error:', updateError)
-        return { error: 'Error al guardar la configuración.' }
+        console.error('[updateTenantConfig] Supabase Update Error:', updateError)
+        return { error: `Error DB: ${updateError.message}` }
     }
 
+    console.log('[updateTenantConfig] Success');
     revalidatePath('/dashboard/configuracion')
     return { success: true }
 }
@@ -108,12 +98,29 @@ export async function getTenantConfig() {
     const tenantId = (profile as any).tenant_id as string
 
     // Use Admin client to bypass RLS on tenants table
-    const { data: tenant } = await supabaseAdmin
+    // Select specific columns
+    const { data: tenant, error } = await supabaseAdmin
         .from('tenants')
-        .select('config')
+        .select('config, goodbarber_app_id, goodbarber_api_key')
         .eq('id', tenantId)
         .single()
 
-    // Return typed config or just raw
-    return { config: (tenant as any)?.config }
+    if (error || !tenant) {
+        console.error('[getTenantConfig] Error:', error);
+        return { error: 'Error fetching config' };
+    }
+
+    // Map back to the structure expected by frontend form
+    // Priority: Specific Columns > JSON Config > Empty
+    const t = tenant as any;
+    const gbConfig = {
+        app_id: t.goodbarber_app_id || t.config?.goodbarber?.app_id || '',
+        api_key: t.goodbarber_api_key || t.config?.goodbarber?.api_key || ''
+    }
+
+    return {
+        config: {
+            goodbarber: gbConfig
+        }
+    }
 }

@@ -59,8 +59,9 @@ export default function SettingsPage() {
             } else {
                 alert('Configuración guardada exitosamente')
             }
-        } catch (e) {
-            alert('Error inesperado')
+        } catch (e: any) {
+            console.error("Submit Error:", e)
+            alert(`Error al guardar: ${e.message || 'Error desconocido'}`)
         } finally {
             setLoading(false)
         }
