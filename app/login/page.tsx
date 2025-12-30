@@ -18,6 +18,12 @@ export default async function LoginPage(props: {
     const searchParams = await props.searchParams
     const message = searchParams.message
 
+    // Check for critical configuration errors
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const configError = !supabaseUrl
+        ? "Error de Configuración: La URL de Supabase no ha sido inyectada. Contacte al administrador."
+        : null
+
     return (
         <div className="flex h-screen w-full items-center justify-center bg-gray-50 px-4">
             <Card className="w-full max-w-sm">
@@ -65,7 +71,12 @@ export default async function LoginPage(props: {
                     </CardContent>
                     <CardFooter className="flex flex-col">
                         <Button className="w-full">Ingresar</Button>
-                        {message && (
+                        {configError && (
+                            <p className="mt-4 p-4 bg-yellow-100 text-yellow-800 text-center rounded-md text-sm font-bold border border-yellow-300">
+                                {configError}
+                            </p>
+                        )}
+                        {message && !configError && (
                             <p className="mt-4 p-4 bg-red-100 text-red-700 text-center rounded-md text-sm">
                                 {message}
                             </p>
