@@ -1,0 +1,1 @@
+INSERT INTO content_items (tenant_id, title, summary, content_html, thumbnail_url, category, author_name, status, provider_id) VALUES ('4d764008-4c64-4b2f-a039-17263352fdb5', 'Noticia Seed (AP)')

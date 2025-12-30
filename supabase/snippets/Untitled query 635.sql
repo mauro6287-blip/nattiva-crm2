@@ -1,0 +1,1 @@
+const { data: profile } = await supabase.from('user_profiles').select('tenant_id').eq('id', user.id).single();

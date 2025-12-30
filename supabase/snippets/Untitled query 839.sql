@@ -1,0 +1,1 @@
+DELETE FROM public.family_members WHERE full_name = 'Hijo Prueba SQL';

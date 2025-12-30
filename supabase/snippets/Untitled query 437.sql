@@ -1,0 +1,1 @@
+SELECT email, name, id FROM public.user_profiles;
