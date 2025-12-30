@@ -1,3 +1,18 @@
+-- Rename created_by to user_id if it exists (Fix for previous schema mismatch)
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'tickets' AND column_name = 'created_by'
+    ) THEN
+        ALTER TABLE public.tickets RENAME COLUMN created_by TO user_id;
+    END IF;
+
+    -- Ensure is_internal exists on ticket_messages (Fix for missing column)
+    ALTER TABLE public.ticket_messages ADD COLUMN IF NOT EXISTS is_internal BOOLEAN DEFAULT false;
+END $$;
+
 -- Create Ticket Categories Table
 CREATE TABLE IF NOT EXISTS public.ticket_categories (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -64,10 +79,7 @@ FOR SELECT USING (tenant_id IN (SELECT tenant_id FROM public.user_profiles WHERE
 CREATE POLICY "Tenant Admins manage categories" ON public.ticket_categories
 FOR ALL USING (
     tenant_id IN (SELECT tenant_id FROM public.user_profiles WHERE id = auth.uid())
-    AND EXISTS (
-        SELECT 1 FROM public.user_profiles 
-        WHERE id = auth.uid() AND role IN ('admin', 'superadmin') -- Assuming roles exist in profile or we check generic admin logic
-    )
+    AND (auth.jwt() ->> 'role') IN ('admin', 'superadmin')
 );
 
 -- Policies: Tickets
@@ -75,10 +87,8 @@ FOR ALL USING (
 CREATE POLICY "Admins view all tenant tickets" ON public.tickets
 FOR ALL USING (
     tenant_id IN (SELECT tenant_id FROM public.user_profiles WHERE id = auth.uid())
-    -- Add role check if we want to separate standard users from admins clearly. 
-    -- For now, let's say anyone with 'admin' role sees all.
     AND (
-        EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid() AND role IN ('admin'))
+        (auth.jwt() ->> 'role') IN ('admin')
         OR
         user_id = auth.uid() -- Or user sees their own
     )
@@ -99,7 +109,7 @@ FOR INSERT WITH CHECK (
 CREATE POLICY "Admins manage all tickets" ON public.tickets
 FOR ALL USING (
    tenant_id IN (SELECT tenant_id FROM public.user_profiles WHERE id = auth.uid())
-   AND (SELECT role FROM public.user_profiles WHERE id = auth.uid()) = 'admin'
+   AND (auth.jwt() ->> 'role') = 'admin'
 );
 
 
@@ -123,14 +133,14 @@ FOR ALL USING (
         SELECT id FROM public.tickets 
         WHERE tenant_id IN (SELECT tenant_id FROM public.user_profiles WHERE id = auth.uid())
     )
-    AND (SELECT role FROM public.user_profiles WHERE id = auth.uid()) = 'admin'
+    AND (auth.jwt() ->> 'role') = 'admin'
 );
 
 -- Policies: Macros
 CREATE POLICY "Admins manage macros" ON public.support_macros
 FOR ALL USING (
     tenant_id IN (SELECT tenant_id FROM public.user_profiles WHERE id = auth.uid())
-    AND (SELECT role FROM public.user_profiles WHERE id = auth.uid()) = 'admin'
+    AND (auth.jwt() ->> 'role') = 'admin'
 );
 
 -- Indexes

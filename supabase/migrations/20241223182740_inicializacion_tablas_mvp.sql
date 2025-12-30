@@ -243,7 +243,7 @@ alter table public.validation_events enable row level security;
 create table public.tickets (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid references public.tenants(id) on delete cascade not null,
-  created_by uuid references auth.users(id) on delete set null,
+  user_id uuid references auth.users(id) on delete set null,
   assigned_to uuid references auth.users(id) on delete set null,
   subject text not null,
   status public.ticket_status default 'open',

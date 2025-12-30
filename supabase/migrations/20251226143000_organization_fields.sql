@@ -23,10 +23,10 @@ alter table organization_fields enable row level security;
 
 create policy "Admins can manage organization fields"
   on organization_fields for all
-  using (exists (
-    select 1 from user_profiles
-    where id = auth.uid() and role = 'admin' and tenant_id = organization_fields.tenant_id
-  ));
+  using (
+    (auth.jwt() ->> 'role') = 'admin'
+    AND (select tenant_id from user_profiles where id = auth.uid()) = organization_fields.tenant_id
+  );
 
 create policy "Authenticated users can view organization fields"
   on organization_fields for select

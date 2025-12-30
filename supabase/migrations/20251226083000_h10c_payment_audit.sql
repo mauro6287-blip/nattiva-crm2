@@ -12,21 +12,12 @@ alter table payment_audit_logs enable row level security;
 
 create policy "Admins can view audit logs"
   on payment_audit_logs for select
-  using (exists (
-    select 1 from user_profiles
-    where id = auth.uid() and role = 'admin'
-  ));
+  using ((auth.jwt() ->> 'role') = 'admin');
 
 create policy "Admins can insert audit logs"
   on payment_audit_logs for insert
-  with check (exists (
-    select 1 from user_profiles
-    where id = auth.uid() and role = 'admin'
-  ));
+  with check ((auth.jwt() ->> 'role') = 'admin');
   
 create policy "Admins can update audit logs"
   on payment_audit_logs for update
-  using (exists (
-    select 1 from user_profiles
-    where id = auth.uid() and role = 'admin'
-  ));
+  using ((auth.jwt() ->> 'role') = 'admin');

@@ -17,10 +17,7 @@ CREATE INDEX IF NOT EXISTS idx_tenants_slug ON public.tenants(slug);
 CREATE POLICY "SuperAdmins can manage tenants"
 ON public.tenants
 USING (
-    EXISTS (
-        SELECT 1 FROM public.user_profiles
-        WHERE id = auth.uid() AND role = 'superadmin'
-    )
+    (auth.jwt() ->> 'role') = 'superadmin'
 );
 
 -- Migration for demo data support (optional, but good to have prepared)

@@ -20,12 +20,8 @@ create policy "Admins can manage family members"
     on family_members
     for all
     using (
-        exists (
-            select 1 from user_profiles
-            where id = auth.uid()
-            and role = 'admin'
-            and tenant_id = family_members.tenant_id
-        )
+        (auth.jwt() ->> 'role') = 'admin'
+        AND (select tenant_id from user_profiles where id = auth.uid()) = family_members.tenant_id
     );
 
 -- Regular users (if we had them accessing this) might need read access

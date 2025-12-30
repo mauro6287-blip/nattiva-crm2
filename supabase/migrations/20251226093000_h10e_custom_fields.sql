@@ -13,10 +13,7 @@ alter table custom_field_definitions enable row level security;
 
 create policy "Admins can manage custom fields"
   on custom_field_definitions for all
-  using (exists (
-    select 1 from user_profiles
-    where id = auth.uid() and role = 'admin'
-  ));
+  using ((auth.jwt() ->> 'role') = 'admin');
 
 create policy "All authenticated can read custom fields"
   on custom_field_definitions for select

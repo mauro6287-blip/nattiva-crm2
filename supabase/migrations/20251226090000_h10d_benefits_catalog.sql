@@ -17,10 +17,7 @@ alter table benefits_catalog enable row level security;
 
 create policy "Admins can manage benefits"
   on benefits_catalog for all
-  using (exists (
-    select 1 from user_profiles
-    where id = auth.uid() and role = 'admin'
-  ));
+  using ((auth.jwt() ->> 'role') = 'admin');
 
 -- Allow public read for the API (if bypass RLS is not used) or Auth Read
 create policy "Public read access for API"
