@@ -28,15 +28,20 @@ export default function SettingsPage() {
 
     useEffect(() => {
         // Load initial config
-        getTenantConfig().then((res) => {
-            const config = (res.config as any) || {}
-            const gb = config.goodbarber || {}
+        getTenantConfig()
+            .then((res) => {
+                const config = (res?.config as any) || {}
+                const gb = config?.goodbarber || {}
 
-            form.setValue('gbAppId', gb.app_id || '')
-            form.setValue('gbApiKey', gb.api_key || '')
-
-            setFetching(false)
-        })
+                form.setValue('gbAppId', gb?.app_id || '')
+                form.setValue('gbApiKey', gb?.api_key || '')
+            })
+            .catch((err) => {
+                console.error("Failed to load config:", err)
+            })
+            .finally(() => {
+                setFetching(false)
+            })
     }, [form])
 
     const onSubmit = async (data: ConfigData) => {
