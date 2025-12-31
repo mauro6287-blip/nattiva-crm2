@@ -1,48 +1,19 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { Database } from '@/types_db'
+import { createClient } from '@supabase/supabase-js';
 
-// Singleton instance
-let adminClient: SupabaseClient<Database> | null = null;
+export const getAdminClient = () => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-/**
- * Retrieves the Supabase Admin Client safely.
- * Returns null if credentials are missing instead of throwing.
- * This prevents Server Components from crashing during render.
- */
-export function getAdminClient(): SupabaseClient<Database> | null {
-    // Return existing instance if available
-    if (adminClient) return adminClient;
+    if (!supabaseUrl || !supabaseServiceKey) return null;
 
-    // Hard Fallback for Hostinger Injection Failure
-    const HARD_URL = 'https://pxfucuiqtktgwspvpffh.supabase.co'
-    const HARD_KEY = 'sb_secret_OJOv-kxfDWjoShlQpoutsw_tyDkFNrN'
+    return createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+        }
+    });
+};
 
-    const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || HARD_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || HARD_KEY;
-
-    // Safety Clean: Remove trailing slash
-    const supabaseUrl = rawUrl?.replace(/\/$/, "");
-
-    // Validation Logic - Log Warning but DO NOT THROW
-    if (!supabaseUrl || !serviceRoleKey) {
-        // Only log detailed warning in server logs (visible in Hostinger)
-        console.warn('⚠️ [Supabase Admin] Initialization skipped: Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.');
-        return null;
-    }
-
-    try {
-        adminClient = createClient<Database>(supabaseUrl, serviceRoleKey, {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false
-            }
-        });
-        return adminClient;
-    } catch (e) {
-        console.error('⚠️ [Supabase Admin] Initialization failed with exception:', e);
-        return null;
-    }
-}
-
-// Deprecated: Alias for backward compatibility if needed, but safe now
+// Deprecated alias for backward compatibility
 export const createAdminClient = getAdminClient;
