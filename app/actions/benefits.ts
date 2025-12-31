@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 
 export async function getBenefits() {
     const supabase = createAdminClient()
+    if (!supabase) return []
+
     const { data: benefits, error } = await supabase
         .from('benefits_catalog')
         .select('*')
@@ -19,6 +21,8 @@ export async function getBenefits() {
 
 export async function saveBenefit(data: any) {
     const supabase = createAdminClient()
+    if (!supabase) return { error: 'Error de configuración: Cliente no inicializado' }
+
     const { id, ...payload } = data
 
     if (id) {
@@ -44,6 +48,8 @@ export async function saveBenefit(data: any) {
 
 export async function toggleBenefitStatus(id: string, currentStatus: boolean) {
     const supabase = createAdminClient()
+    if (!supabase) return { error: 'Error de configuración: Cliente no inicializado' }
+
     const { error } = await (supabase
         .from('benefits_catalog') as any)
         .update({ is_active: !currentStatus })
@@ -57,6 +63,8 @@ export async function toggleBenefitStatus(id: string, currentStatus: boolean) {
 
 export async function deleteBenefit(id: string) {
     const supabase = createAdminClient()
+    if (!supabase) return { error: 'Error de configuración: Cliente no inicializado' }
+
     const { error } = await supabase
         .from('benefits_catalog')
         .delete()

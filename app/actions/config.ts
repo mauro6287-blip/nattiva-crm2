@@ -16,8 +16,11 @@ export async function updateTenantConfig(configData: IntegrationConfig) {
 
     try {
         // 0. Initialize Admin Client Safely (Lazy Init)
-        // This will throw if the key is missing, which is safely caught below.
         const supabaseAdmin = createAdminClient();
+
+        if (!supabaseAdmin) {
+            throw new Error('Error de configuración de servidor: Servicio no disponible (Admin Client Missing).');
+        }
 
         // 1. Auth check
         const supabase = await createClient()
@@ -99,6 +102,10 @@ export async function getTenantConfig() {
         // Use Admin client to bypass RLS on tenants table
         // Lazy Init Here too
         const supabaseAdmin = createAdminClient();
+
+        if (!supabaseAdmin) {
+            return { error: 'Servicio de configuración no disponible temporalmente.' };
+        }
 
         // Select specific columns
         const { data: tenant, error } = await supabaseAdmin

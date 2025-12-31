@@ -48,6 +48,8 @@ export async function uploadCSV(formData: FormData) {
 
     // Helper to get tenant AND fetch custom fields
     const supabaseAdmin = createAdminClient()
+    if (!supabaseAdmin) return { error: 'Error de configuración: Cliente Admin no disponible' }
+
     const { data: profile } = await (supabaseAdmin.from('user_profiles') as any).select('tenant_id').eq('id', user.id).single()
 
     if (!profile || typeof profile !== 'object' || !('tenant_id' in (profile as any))) {
@@ -122,6 +124,7 @@ export async function uploadCSV(formData: FormData) {
 
 export async function validateBatch(batchId: string) {
     const supabase = createAdminClient()
+    if (!supabase) return { success: false, error: 'Cliente Admin no disponible' }
 
     // Get Pending rows
     const { data: rows } = await (supabase
@@ -184,6 +187,7 @@ export async function validateBatch(batchId: string) {
 export async function commitBatch(batchId: string) {
     // 1. Get Admin Client
     const supabaseAdmin = createAdminClient()
+    if (!supabaseAdmin) return { error: 'Cliente Admin no disponible' }
 
     // 2. Resolve Current User's Tenant (Source of Truth)
     // We strictly fetch the tenant_id of the person executing the commit to ensure records belong to them.
@@ -241,6 +245,8 @@ export async function commitBatch(batchId: string) {
 
 export async function getBatchSummary(batchId: string) {
     const supabase = createAdminClient()
+    if (!supabase) return null
+
     const { data } = await (supabase.from('import_staging_socios') as any).select('status').eq('batch_id', batchId)
 
     if (!data) return null;
@@ -256,6 +262,8 @@ export async function getBatchSummary(batchId: string) {
 
 export async function getBatchRows(batchId: string) {
     const supabase = createAdminClient()
+    if (!supabase) return []
+
     const { data } = await (supabase.from('import_staging_socios') as any).select('*').eq('batch_id', batchId).order('id')
     return data || []
 }

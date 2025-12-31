@@ -71,6 +71,9 @@ export async function processFamilyImport(formData: FormData): Promise<ImportRes
 
         // 2. The Muscle: Elevated Search (Admin Client)
         const supabaseAdmin = createAdminClient()
+        if (!supabaseAdmin) {
+            return { success: false, message: 'Error de configuración: Servicio de administración no disponible.' }
+        }
 
         // Fetch ALL potential parents to build an In-Memory Lookup Map
         // We select minimal fields to keep it fast.
