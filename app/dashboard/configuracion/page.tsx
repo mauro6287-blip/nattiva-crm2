@@ -54,14 +54,17 @@ export default function SettingsPage() {
                 }
             }
             const res = await updateTenantConfig(payload)
-            if (res.error) {
-                alert('Error: ' + res.error)
-            } else {
+
+            if (res.success) {
                 alert('Configuración guardada exitosamente')
+            } else {
+                // Show specific error from server
+                console.error("Server Error:", res.error)
+                alert(`Error: ${res.error}`)
             }
         } catch (e: any) {
             console.error("Submit Error:", e)
-            alert(`Error al guardar: ${e.message || 'Error desconocido'}`)
+            alert(`Error inesperado: ${e.message || 'Error desconocido'}`)
         } finally {
             setLoading(false)
         }
