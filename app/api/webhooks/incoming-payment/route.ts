@@ -6,6 +6,9 @@ export async function POST(req: NextRequest) {
         const body = await req.json()
         const { subject, text_body } = body
         const supabase = createAdminClient()
+        if (!supabase) {
+            return NextResponse.json({ status: 'error', message: 'Config Error: Admin Client Missing' }, { status: 503 })
+        }
 
         // 1. Audit Insert (Status: ORPHAN by default)
         const content = `${subject || ''} ${text_body || ''}`

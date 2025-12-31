@@ -5,6 +5,9 @@ import { createAdminClient } from '@/utils/supabase/admin'
 export async function POST(request: Request) {
     const { type } = await request.json()
     const supabase = createAdminClient()
+    if (!supabase) {
+        return NextResponse.json({ error: 'Config Error' }, { status: 503 })
+    }
 
     // Resolve a tenant for logging (just first one again)
     const { data: tenant } = await (supabase.from('tenants') as any).select('id').limit(1).single()

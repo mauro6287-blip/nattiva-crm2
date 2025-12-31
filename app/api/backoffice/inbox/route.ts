@@ -5,6 +5,10 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
     const supabase = createAdminClient()
+    if (!supabase) {
+        return NextResponse.json({ tasks: [], error: 'Configuration Error: Admin Client missing' }, { status: 503 })
+    }
+
     const { searchParams } = new URL(request.url)
     // We could extract tenant_id from headers/auth, but for MVP admin client sees all or filtered by user tenant if we pass it.
     // Assuming the user calling this is an Admin and we want their tenant's tasks.
@@ -14,6 +18,7 @@ export async function GET(request: Request) {
     // For this prototype, we'll fetch ALL 'open' items for the active tenant context.
 
     // Hardcoded Tenant for MVP dev (or fetch from params)
+    // @ts-ignore
     const tenantIdRes = await (supabase.from('tenants') as any).select('id').limit(1).single()
     const tenantId = tenantIdRes.data?.id
 

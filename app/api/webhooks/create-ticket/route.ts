@@ -19,6 +19,9 @@ export async function POST(request: Request) {
 
     // Create Service Role Client (Bypasses RLS)
     const supabaseAdmin = createAdminClient()
+    if (!supabaseAdmin) {
+        return NextResponse.json({ error: 'Config Error: Admin Client Missing' }, { status: 503 })
+    }
 
     try {
         const body = await request.json()

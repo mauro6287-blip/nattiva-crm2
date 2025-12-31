@@ -56,6 +56,7 @@ export class Logger {
         // For MVP/Monolith, direct insert is fine.
         try {
             const supabase = createAdminClient()
+            if (!supabase) return
 
             // If tenant_id is missing, we might try to infer or leave null (system wide)
 

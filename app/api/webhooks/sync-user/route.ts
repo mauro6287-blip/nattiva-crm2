@@ -24,6 +24,9 @@ export async function POST(request: Request) {
         }
 
         const supabaseAdmin = createAdminClient()
+        if (!supabaseAdmin) {
+            return NextResponse.json({ success: false, error: 'Config Error' }, { status: 503 })
+        }
 
         // 1. Resolve Tenant (Cacheable in real-world, here usually fast enough)
         // Optimization: In a real multi-tenant app, the app should send a tenant_slug or API key.

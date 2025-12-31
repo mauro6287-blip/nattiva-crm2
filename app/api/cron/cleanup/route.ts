@@ -11,6 +11,9 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createAdminClient()
+    if (!supabase) {
+        return NextResponse.json({ error: 'Config Error: Admin Client Missing' }, { status: 503 })
+    }
 
     try {
         // 2. Execute Cleanup RPC
