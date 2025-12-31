@@ -8,8 +8,10 @@ export function createClient() {
     console.error('Faltan las variables de entorno de Supabase. Verifica tu archivo .env o la configuración en Hostinger.')
   }
 
+  const normalizedUrl = supabaseUrl?.replace(/\/$/, '') || ''
+
   return createBrowserClient(
-    supabaseUrl || '',
+    normalizedUrl,
     supabaseKey || ''
   )
 }
