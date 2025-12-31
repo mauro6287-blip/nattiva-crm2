@@ -9,6 +9,11 @@ export const getAdminClient = () => {
     // Clean URL just in case
     const supabaseUrl = rawUrl.trim().replace(/\/$/, "");
 
+    // DIAGNOSTIC LOGGING (REMOVE AFTER FIX)
+    console.log('[Admin Init] URL:', supabaseUrl);
+    console.log('[Admin Init] Key Start:', supabaseServiceKey.substring(0, 5));
+    console.log('[Admin Init] Key End:', supabaseServiceKey.substring(supabaseServiceKey.length - 5));
+
     return createClient(supabaseUrl, supabaseServiceKey, {
         auth: {
             persistSession: false,
