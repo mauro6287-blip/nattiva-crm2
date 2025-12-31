@@ -1,6 +1,15 @@
 const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
+require('dotenv').config() // Load .env file explicitly
+
+// SAFE DIAGNOSTIC STARTUP LOGGING
+console.log('--- ENV VAR DIAGNOSTIC ---')
+console.log('PORT:', process.env.PORT || 'Not set (will use 3000)')
+console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'PRESENT' : 'MISSING')
+console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? `PRESENT (${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.substring(0, 5)}...)` : 'MISSING')
+console.log('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? `PRESENT (${process.env.SUPABASE_SERVICE_ROLE_KEY.substring(0, 5)}...)` : 'MISSING')
+console.log('--------------------------')
 
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = 'localhost'
