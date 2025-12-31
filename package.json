@@ -5,10 +5,11 @@
   "engines": {
     "node": ">=18.0.0"
   },
+  "main": "app.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node app.js",
     "lint": "eslint"
   },
   "dependencies": {

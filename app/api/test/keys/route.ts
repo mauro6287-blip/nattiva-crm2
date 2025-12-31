@@ -46,5 +46,20 @@ export async function GET() {
         results.v2_test = { status: 'FAILED', error: e.message || 'Unknown', type: 'V2 (SB_)', url: v2_url };
     }
 
+    // 3. TEST USER PROVIDED KEYS (MANUAL CHECK)
+    const user_url = 'https://pxfucuiqtktgwspvpffh.supabase.co'; // Known Correct
+    const user_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4ZnVjdWlxdGt0Z3dzcHZwZmZoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NzA2ODgzNiwiZXhwIjoyMDgyNjQ0ODM2fQ.s6SpVC6nAQMoi9bdL7g5Nwg7UdxGlnqkHQ5OcyJH6uU';
+
+    try {
+        const client = createClient(user_url, user_key, { auth: { persistSession: false } });
+        const { error } = await client.from('tenants').select('count', { count: 'exact', head: true });
+
+        if (error) throw error;
+        results.user_provided_test = { status: 'SUCCESS', type: 'User Provided JWT', url: user_url };
+    } catch (e: any) {
+        results.user_provided_test = { status: 'FAILED', error: e.message || 'Unknown', type: 'User Provided JWT', url: user_url };
+    }
+
     return NextResponse.json(results);
 }
+
