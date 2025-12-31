@@ -1,22 +1,8 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { Database } from '@/types_db'
+import { createAdminClient } from '@/utils/supabase/admin'
 import { revalidatePath } from 'next/cache'
-
-// Service Role client for writing to tenants table
-// Using explicit ENV vars for safety
-const supabaseAdmin = createAdminClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false
-        }
-    }
-)
 
 interface IntegrationConfig {
     goodbarber?: {
@@ -29,10 +15,9 @@ export async function updateTenantConfig(configData: IntegrationConfig) {
     console.log('[updateTenantConfig] Start processing...', configData);
 
     try {
-        // 0. Critical Env Check
-        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-            throw new Error('Error de configuración de servidor: Falta la llave de servicio (Service Role Key).');
-        }
+        // 0. Initialize Admin Client Safely (Lazy Init)
+        // This will throw if the key is missing, which is safely caught below.
+        const supabaseAdmin = createAdminClient();
 
         // 1. Auth check
         const supabase = await createClient()
@@ -96,44 +81,53 @@ export async function updateTenantConfig(configData: IntegrationConfig) {
 }
 
 export async function getTenantConfig() {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user) return { error: 'Unauthorized' }
+        if (!user) return { error: 'Unauthorized' }
 
-    const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user.id)
-        .single()
+        const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('tenant_id')
+            .eq('id', user.id)
+            .single()
 
-    if (!profile || !('tenant_id' in (profile as any))) return { error: 'No tenant' }
-    const tenantId = (profile as any).tenant_id as string
+        if (!profile || !(profile as any).tenant_id) return { error: 'No tenant' }
+        const tenantId = (profile as any).tenant_id
 
-    // Use Admin client to bypass RLS on tenants table
-    // Select specific columns
-    const { data: tenant, error } = await supabaseAdmin
-        .from('tenants')
-        .select('config, goodbarber_app_id, goodbarber_api_key')
-        .eq('id', tenantId)
-        .single()
+        // Use Admin client to bypass RLS on tenants table
+        // Lazy Init Here too
+        const supabaseAdmin = createAdminClient();
 
-    if (error || !tenant) {
-        console.error('[getTenantConfig] Error:', error);
-        return { error: 'Error fetching config' };
-    }
+        // Select specific columns
+        const { data: tenant, error } = await supabaseAdmin
+            .from('tenants')
+            .select('config, goodbarber_app_id, goodbarber_api_key')
+            .eq('id', tenantId)
+            .single()
 
-    // Map back to the structure expected by frontend form
-    // Priority: Specific Columns > JSON Config > Empty
-    const t = tenant as any;
-    const gbConfig = {
-        app_id: t.goodbarber_app_id || t.config?.goodbarber?.app_id || '',
-        api_key: t.goodbarber_api_key || t.config?.goodbarber?.api_key || ''
-    }
-
-    return {
-        config: {
-            goodbarber: gbConfig
+        if (error || !tenant) {
+            console.error('[getTenantConfig] Error:', error);
+            return { error: 'Error fetching config' };
         }
+
+        // Map back to the structure expected by frontend form
+        // Priority: Specific Columns > JSON Config > Empty
+        const t = tenant as any;
+        const gbConfig = {
+            app_id: t.goodbarber_app_id || t.config?.goodbarber?.app_id || '',
+            api_key: t.goodbarber_api_key || t.config?.goodbarber?.api_key || ''
+        }
+
+        return {
+            config: {
+                goodbarber: gbConfig
+            },
+            success: true
+        }
+    } catch (error: any) {
+        console.error("[getTenantConfig] Exception:", error);
+        return { error: error.message, success: false }
     }
 }
