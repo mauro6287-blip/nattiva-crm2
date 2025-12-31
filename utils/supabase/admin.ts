@@ -13,8 +13,12 @@ export function getAdminClient(): SupabaseClient<Database> | null {
     // Return existing instance if available
     if (adminClient) return adminClient;
 
-    const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Hard Fallback for Hostinger Injection Failure
+    const HARD_URL = 'https://pxfucuiqtktgwspvpffh.supabase.co'
+    const HARD_KEY = 'sb_secret_OJOv-kxfDWjoShlQpoutsw_tyDkFNrN'
+
+    const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || HARD_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || HARD_KEY;
 
     // Safety Clean: Remove trailing slash
     const supabaseUrl = rawUrl?.replace(/\/$/, "");
