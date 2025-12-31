@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { DeleteSocioButton } from './delete-button'
 
 import { SearchInput } from '@/components/dashboard/search-input'
+import { getCustomFields } from '@/app/actions/custom-fields' // Import action
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,8 @@ export default async function SociosPage(props: {
     searchParams: Promise<{ query?: string }>
 }) {
     const supabase = await createClient()
+    const customFields = (await getCustomFields()) || []
+
 
     // 1. Obtener Usuario
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -127,13 +130,17 @@ export default async function SociosPage(props: {
                                     <TableHead>Email</TableHead>
                                     <TableHead>Estado</TableHead>
                                     <TableHead>Origen</TableHead>
+                                    {/* Dynamic Custom Fields Headers */}
+                                    {(customFields as any[]).map(field => (
+                                        <TableHead key={field.id}>{field.label}</TableHead>
+                                    ))}
                                     <TableHead className="text-right">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {!socios || socios.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-24 text-center">
+                                        <TableCell colSpan={6 + customFields.length} className="h-24 text-center">
                                             No hay socios registrados aún.
                                         </TableCell>
                                     </TableRow>
@@ -155,6 +162,12 @@ export default async function SociosPage(props: {
                                                 {/* Fallback for Origin: metadata.source -> 'Manual' */}
                                                 {(socio.metadata && socio.metadata['source']) || 'Manual'}
                                             </TableCell>
+                                            {/* Dynamic Custom Fields Cells */}
+                                            {(customFields as any[]).map(field => (
+                                                <TableCell key={field.id}>
+                                                    {socio.custom_data ? (socio.custom_data[field.field_key] || '-') : '-'}
+                                                </TableCell>
+                                            ))}
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
                                                     <Button variant="ghost" size="sm" asChild>
