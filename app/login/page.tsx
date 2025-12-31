@@ -50,6 +50,7 @@ export default async function LoginPage(props: {
                                     type="email"
                                     placeholder="admin@sindicato.cl"
                                     className="pl-9"
+                                    autoComplete="username"
                                     required
                                 />
                             </div>
@@ -64,6 +65,7 @@ export default async function LoginPage(props: {
                                     type="password"
                                     placeholder="••••••••"
                                     className="pl-9"
+                                    autoComplete="current-password"
                                     required
                                 />
                             </div>

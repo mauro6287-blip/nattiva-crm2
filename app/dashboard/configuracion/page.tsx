@@ -98,12 +98,12 @@ export default function SettingsPage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label>App ID</Label>
-                                <Input {...form.register('gbAppId')} placeholder="Ej: 123456" />
+                                <Input {...form.register('gbAppId')} placeholder="Ej: 123456" autoComplete="off" />
                                 {form.formState.errors.gbAppId && <p className="text-red-500 text-xs">{form.formState.errors.gbAppId.message}</p>}
                             </div>
                             <div className="space-y-2">
                                 <Label>API Key (Secreta)</Label>
-                                <Input {...form.register('gbApiKey')} type="password" placeholder="••••••••••••••••" />
+                                <Input {...form.register('gbApiKey')} type="password" placeholder="••••••••••••••••" autoComplete="off" />
                                 <p className="text-xs text-slate-400">Esta llave se usará para autenticar peticiones desde el CRM hacia Nattiva.</p>
                                 {form.formState.errors.gbApiKey && <p className="text-red-500 text-xs">{form.formState.errors.gbApiKey.message}</p>}
                             </div>
